@@ -1,0 +1,310 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PCAP Analyzer</title>
+    <style>
+        {% if pdf_mode %}
+        /* -------- LIGHT THEME FOR PDF -------- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background: #ffffff;
+            color: #000000;
+        }
+        .page { margin: 0; padding: 0; }
+        .card { padding: 0; border: none; box-shadow: none; }
+        h1, h2, h3 { color: #000000; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 11pt;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 4px 6px;
+            text-align: left;
+        }
+        th {
+            background: #e5e5e5;
+        }
+        .watermark {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-25deg);
+            font-size: 40pt;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.08);
+        }
+        .tagline, .footer { font-size: 9pt; color: #333333; }
+        code { font-family: "Courier New", monospace; font-size: 9pt; }
+        {% else %}
+        /* -------- DARK THEME FOR BROWSER -------- */
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 20px 40px 20px;
+            position: relative;
+        }
+        .card {
+            background: #020617;
+            border-radius: 12px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.7);
+            padding: 24px 28px 32px 28px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        .watermark {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-25deg);
+            font-size: 64px;
+            font-weight: 700;
+            color: rgba(148, 163, 184, 0.08);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 18px;
+        }
+        .title {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #38bdf8;
+        }
+        .tagline {
+            font-size: 12px;
+            font-weight: 500;
+            color: #94a3b8;
+            text-align: right;
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        input[type="file"] {
+            color: #e5e7eb;
+        }
+        .btn-primary,
+        .btn-secondary {
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            color: #020617;
+        }
+        .btn-secondary {
+            background: #020617;
+            color: #e5e7eb;
+            border: 1px solid #64748b;
+        }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-secondary:hover { background: #0f172a; }
+        h2, h3 { color: #e5e7eb; margin-top: 18px; margin-bottom: 8px; }
+        p { margin: 4px 0 10px 0; color: #cbd5f5; font-size: 14px; }
+        table {
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            width: 100%;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            padding: 6px 8px;
+            text-align: left;
+        }
+        th {
+            background: rgba(15, 23, 42, 0.95);
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+        tr:nth-child(even) td {
+            background: rgba(15, 23, 42, 0.8);
+        }
+        code {
+            background: #020617;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .footer {
+            margin-top: 22px;
+            font-size: 11px;
+            text-align: right;
+            color: #64748b;
+        }
+        {% endif %}
+    </style>
+</head>
+<body>
+    
+
+    <div class="page">
+        <div class="card">
+            <div class="header">
+                <div class="title">PCAP ANALYZER</div>
+                <div class="tagline">
+                    Hope this report is useful<br>
+                    Created with peace by Revanth<br>
+                    Donations accepted at upi number : 8523803734
+                
+                </div>
+            </div>
+
+            {% if not pdf_mode %}
+            <div class="actions">
+                <form method="post" enctype="multipart/form-data">
+                    <input type="file" name="file" accept=".pcap,.pcapng" required>
+                    <button type="submit" class="btn-primary">Analyze PCAP</button>
+                </form>
+
+                {% if results %}
+                    <form method="get" action="{{ url_for('download_pdf') }}">
+                        <button type="submit" class="btn-secondary">
+                            Download report as PDF
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if results %}
+                <h2>Summary for {{ filename }}</h2>
+
+                <h3>Basic information</h3>
+                <p>Total packets captured: <strong>{{ results.packet_count }}</strong></p>
+
+                <h3>Protocols detected (all layers)</h3>
+                <p>This table shows every protocol layer Scapy detected in the capture and how many packets used it.</p>
+                <table>
+                    <tr>
+                        <th>Protocol / Layer</th>
+                        <th>Packet count</th>
+                    </tr>
+                    {% for layer in results.layers %}
+                    <tr>
+                        <td>{{ layer.name }}</td>
+                        <td>{{ layer.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h3>Transport protocols (L4)</h3>
+                <table>
+                    <tr>
+                        <th>Protocol</th>
+                        <th>Packet count</th>
+                    </tr>
+                    {% for proto, count in results.l4_protocols.items() %}
+                    <tr>
+                        <td>{{ proto }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h3>Top communication flows</h3>
+                <p>These are the busiest conversations (source → destination) in the capture.</p>
+                <table>
+                    <tr>
+                        <th>Source</th>
+                        <th>Destination</th>
+                        <th>Protocol</th>
+                        <th>Packets</th>
+                    </tr>
+                    {% for flow in results.top_flows %}
+                    <tr>
+                        <td>{{ flow.src_ip }}{% if flow.src_port %}:{{ flow.src_port }}{% endif %}</td>
+                        <td>{{ flow.dst_ip }}{% if flow.dst_port %}:{{ flow.dst_port }}{% endif %}</td>
+                        <td>{{ flow.proto }}</td>
+                        <td>{{ flow.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <h3>Possible port scans</h3>
+                <p>If a host talks to many different ports, it might be scanning the network.</p>
+                {% if results.port_scan_suspects %}
+                <table>
+                    <tr>
+                        <th>Source IP</th>
+                        <th>Unique destination ports</th>
+                        <th>Total packets</th>
+                    </tr>
+                    {% for s in results.port_scan_suspects %}
+                    <tr>
+                        <td>{{ s.src_ip }}</td>
+                        <td>{{ s.unique_ports }}</td>
+                        <td>{{ s.total_pkts }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <p>No strong port‑scan patterns detected by this simple check.</p>
+                {% endif %}
+
+                <h3>Top DNS domains</h3>
+                {% if results.top_dns %}
+                <table>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Queries</th>
+                    </tr>
+                    {% for domain, count in results.top_dns %}
+                    <tr>
+                        <td>{{ domain }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <p>No DNS queries were found in this capture.</p>
+                {% endif %}
+
+                <h3>Sample HTTP requests</h3>
+                {% if results.http_requests %}
+                <p>These are the first few clear‑text HTTP requests seen (useful for quick inspection).</p>
+                <ul>
+                    {% for line in results.http_requests %}
+                    <li><code>{{ line }}</code></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No clear‑text HTTP requests detected (traffic may be encrypted or use other ports).</p>
+                {% endif %}
+
+                <div class="footer">
+                    Report generated by Revanth • {{ filenames }}
+                </div>
+            {% else %}
+                <p>No PCAP has been analyzed yet. Upload a file above to generate a report.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
